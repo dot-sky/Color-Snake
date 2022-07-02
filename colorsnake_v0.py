@@ -17,9 +17,18 @@ RED = [254, 8, 59]
 BLACK = [0, 0, 0]
 BLUE = [33, 61, 252]
 
+class Color():
+    def __init__(self):
+        self.value = [0,0,0]
+    def random_color(self):
+        self.value[0] = random.randrange(256)
+        self.value[1] = random.randrange(256)
+        self.value[2] = random.randrange(256)
 
 class Apple():
     def __init__(self, game_screen, snake):
+        self.color = Color()
+        self.color.random_color()
         self.game_screen = game_screen
         self.snake = snake
         self.x = 0
@@ -28,7 +37,7 @@ class Apple():
 
     def draw(self):
         rect1 = pygame.Rect(self.x, self.y, SIZE, SIZE)
-        pygame.draw.rect(self.game_screen, RED, rect1)
+        pygame.draw.rect(self.game_screen, self.color.value, rect1)
 
     def new_position(self):
         coord_x = self.random_xcoordinate()
@@ -154,6 +163,7 @@ class SnakeGame:
         if self.is_collition(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.play_sound("ding")
             self.snake.increase_size()
+            self.apple.color.random_color()
             self.apple.new_position()
             self.speed += 0.5
 
