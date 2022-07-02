@@ -21,13 +21,15 @@ BLUE = [33, 61, 252]
 
 class Color():
     def __init__(self):
-        self.value = [0,0,0]
+        self.value = [100,100,100]
     def random_color(self):
         # bright colors
         h,s,l = random.random(), random.uniform(0.7, 1.0), random.uniform(0.4, 0.65)
         rgb_color = colorsys.hls_to_rgb(h,l,s)
         for i in range(3):
             self.value[i] = int(rgb_color[i]*256) 
+    def get_rgb(self):
+        return getattr(self,'value')
 
 class Apple():  
     def __init__(self, game_screen, snake):
@@ -41,7 +43,6 @@ class Apple():
 
     def draw(self):
         rect1 = pygame.Rect(self.x, self.y, SIZE, SIZE)
-        self.color.random_color()
         pygame.draw.rect(self.game_screen, self.color.value, rect1)
 
     def new_position(self):
@@ -74,13 +75,14 @@ class Snake():
         self.length = length
         self.x = [200]*length
         self.y = [200]*length
+        self.color = [Color().value]*length
 
     def draw(self):
         for i in range(self.length):
-            pygame.draw.rect(self.game_screen, BLUE, 
+            pygame.draw.rect(self.game_screen, self.color[i], 
                              pygame.Rect(self.x[i], self.y[i], SIZE, SIZE))
-            pygame.draw.rect(self.game_screen, YELLOW_LIGHT, 
-                             pygame.Rect(self.x[i]+2, self.y[i]+2, SIZE-4, SIZE-4))
+            pygame.draw.rect(self.game_screen, WHITE, 
+                             pygame.Rect(self.x[i]+3, self.y[i]+3, SIZE-6, SIZE-6))
 
     def move(self):
         # Move body
@@ -100,9 +102,13 @@ class Snake():
 
             self.draw()
 
-    def increase_size(self):
+    def increase_size(self, apple):
         self.x.append(0)
         self.y.append(0)
+        local_rgb = apple.color.value.copy()
+        self.color.append(local_rgb)
+        for color in self.color:
+            print(color)
         self.length += 1
 
     def move_left(self):
@@ -165,7 +171,7 @@ class SnakeGame:
     def ate_apple(self):
         if self.is_collition(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.play_sound("ding")
-            self.snake.increase_size()
+            self.snake.increase_size(self.apple)
             self.apple.color.random_color()
             self.apple.new_position()
             self.speed += 0.5
