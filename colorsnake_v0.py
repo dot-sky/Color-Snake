@@ -2,26 +2,33 @@ import pygame
 import random
 from pygame.locals import *
 
+pygame.init()
+# Constants
 SIZE = 40
 LEFT = 0
 RIGHT = 1
 UP = 2
 DOWN = 3
-WHITE = [255,255,255]
-YELLOW = [255,255,0]
-BLACK = [0,0,0]
+# Colors
+WHITE = [255, 255, 255]
+YELLOW = [255, 255, 0]
+YELLOW_LIGHT = [255, 235, 39]
+RED = [254, 8, 59]
+BLACK = [0, 0, 0]
+BLUE = [33, 61, 252]
+
 
 class Apple():
     def __init__(self, game_screen, snake):
         self.game_screen = game_screen
-        self.apple = pygame.image.load("resources/apple.jpg").convert()
         self.snake = snake
         self.x = 0
         self.y = 0
         self.new_position()
 
     def draw(self):
-        self.game_screen.blit(self.apple, (self.x, self.y))
+        rect1 = pygame.Rect(self.x, self.y, SIZE, SIZE)
+        pygame.draw.rect(self.game_screen, RED, rect1)
 
     def new_position(self):
         coord_x = self.random_xcoordinate()
@@ -30,24 +37,25 @@ class Apple():
             return self.new_position()
         self.x = coord_x
         self.y = coord_y
-        
+
     def coord_in_snake(self, coord_x, coord_y):
         for i in range(self.snake.length):
             if coord_x == self.snake.x[i] and coord_y == self.snake.y[i]:
                 return True
         return False
-    # gets random number 
+    # gets random number
+
     def random_xcoordinate(self):
         coord = random.randrange(self.game_screen.get_width()//SIZE)*SIZE
         return coord
-    
+
     def random_ycoordinate(self):
         coord = random.randrange(self.game_screen.get_height()//SIZE)*SIZE
         return coord
-    
+
+
 class Snake():
     def __init__(self, game_screen, length):
-        self.block = pygame.image.load("resources/block.jpg").convert()
         self.game_screen = game_screen
         self.direction = RIGHT
         self.length = length
@@ -56,7 +64,10 @@ class Snake():
 
     def draw(self):
         for i in range(self.length):
-            self.game_screen.blit(self.block, (self.x[i], self.y[i]))
+            pygame.draw.rect(self.game_screen, BLUE, 
+                             pygame.Rect(self.x[i], self.y[i], SIZE, SIZE))
+            pygame.draw.rect(self.game_screen, YELLOW_LIGHT, 
+                             pygame.Rect(self.x[i]+2, self.y[i]+2, SIZE-4, SIZE-4))
 
     def move(self):
         # Move body
@@ -73,7 +84,7 @@ class Snake():
                 self.y[0] = (self.y[0] - SIZE) % self.game_screen.get_height()
             elif self.direction == DOWN:
                 self.y[0] = (self.y[0] + SIZE) % self.game_screen.get_height()
-            
+
             self.draw()
 
     def increase_size(self):
@@ -82,7 +93,7 @@ class Snake():
         self.length += 1
 
     def move_left(self):
-        if self.length == 1 or self.direction != RIGHT :
+        if self.length == 1 or self.direction != RIGHT:
             self.direction = LEFT
 
     def move_right(self):
@@ -97,14 +108,15 @@ class Snake():
         if self.length == 1 or self.direction != UP:
             self.direction = DOWN
 
+
 class SnakeGame:
     def __init__(self):
-        pygame.init()
+
         pygame.mixer.init()
-        self.surface  = pygame.display.set_mode(size=(1000,600))
+        self.surface = pygame.display.set_mode(size=(1000, 600))
         self.snake = Snake(self.surface, 15)
         self.apple = Apple(self.surface, self.snake)
-        #self.play_bg_music()
+        # self.play_bg_music()
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5
@@ -124,19 +136,19 @@ class SnakeGame:
             raise NameError("pause")
 
         pygame.display.flip()
-    
+
     def render_bg(self):
         self.surface.fill(BLACK)
-    
+
     def count_time(self):
         font = pygame.font.SysFont("consolas", 30)
         time = pygame.time.get_ticks() - self.start_time
-        
-        time_string = self.format_time(time) 
+
+        time_string = self.format_time(time)
 
         time_text = font.render(str(time_string), 1, WHITE)
-        x = self.surface.get_width() - time_text.get_width() 
-        self.surface.blit(time_text, (x,0))
+        x = self.surface.get_width() - time_text.get_width()
+        self.surface.blit(time_text, (x, 0))
 
     def ate_apple(self):
         if self.is_collition(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
@@ -155,32 +167,32 @@ class SnakeGame:
         if (x1 == x2 and y1 == y2):
             return True
         return False
-    
+
     def show_score(self):
         font = pygame.font.SysFont("arial", 30)
         score = font.render(f"Score: {self.snake.length}", True, WHITE)
-        self.surface.blit(score, (0,0))
+        self.surface.blit(score, (0, 0))
 
     def play_sound(self, name):
         sound = pygame.mixer.Sound(f"resources/{name}.mp3")
         pygame.mixer.Sound.play(sound)
-    
 
     def show_game_over(self):
         time = self.get_time()
         self.add_score(time)
-        
+
         self.render_bg()
-        
+
         font = pygame.font.SysFont("arial", 20)
         text_line1 = font.render(f"Score: {self.snake.length}", True, WHITE)
         text_line2 = font.render("Press ENTER to play again", True, WHITE)
         text_line3 = font.render("Press ESC to exit", True, WHITE)
         text_line1.get_width()
         center = int(self.surface.get_width() / 2)
-        self.surface.blit(text_line1, (center - text_line1.get_width()//2,50))
-        self.surface.blit(text_line2, (center - text_line2.get_width()//2,80))
-        self.surface.blit(text_line3, (center - text_line3.get_width()//2,110))
+        self.surface.blit(text_line1, (center - text_line1.get_width()//2, 50))
+        self.surface.blit(text_line2, (center - text_line2.get_width()//2, 80))
+        self.surface.blit(
+            text_line3, (center - text_line3.get_width()//2, 110))
         self.show_score_list(time)
         pygame.display.flip()
         self.snake.length = 1
@@ -193,42 +205,45 @@ class SnakeGame:
         for score, time in self.scores:
             text_y += 30
             color_render = WHITE
-            time_string = self.format_time(time) 
+            time_string = self.format_time(time)
             if score == self.snake.length and time == current_time:
                 color_render = YELLOW
             else:
                 color_render = WHITE
-            text = font.render(f"{time_string}       {score}", True, color_render)
-            self.surface.blit(text, (400,text_y))
+            text = font.render(
+                f"{time_string}       {score}", True, color_render)
+            self.surface.blit(text, (400, text_y))
 
     def get_time(self):
         return pygame.time.get_ticks() - self.start_time
 
     def format_time(self, time):
         time_minutes = str(int(time/60000)).zfill(1)
-        time_seconds = str(int((time%60000)/1000)).zfill(2)
-        time_string = "%s:%s" % (time_minutes, time_seconds) 
+        time_seconds = str(int((time % 60000)/1000)).zfill(2)
+        time_string = "%s:%s" % (time_minutes, time_seconds)
         return time_string
 
     def add_score(self, time):
         self.scores.append((self.snake.length, time))
-        self.scores = sorted(self.scores, key = lambda x: (-x[0], x[1]))
+        self.scores = sorted(self.scores, key=lambda x: (-x[0], x[1]))
         if len(self.scores) > 10:
             self.scores.pop()
+
     def new_game(self):
         self.start_time = pygame.time.get_ticks()
         self.speed = 5
 
     def load_scores(self):
-        with open("resources/data.txt", "r" ) as file:
+        with open("resources/data.txt", "r") as file:
             for line in file:
                 pair = line.split()
                 points = int(pair[0])
                 time = int(pair[1])
                 self.scores.append((points, time))
         pass
+
     def save_scores(self):
-        with open("resources/data.txt", "w" ) as file:
+        with open("resources/data.txt", "w") as file:
             for score, time in self.scores:
                 line = str(score) + " " + str(time) + "\n"
                 file.write(line)
@@ -264,10 +279,10 @@ class SnakeGame:
                 pause = True
 
             self.clock.tick(self.speed)
-            #time.sleep(0.2)
+            # time.sleep(0.2)
         self.save_scores()
+
 
 if __name__ == "__main__":
     game = SnakeGame()
     game.run()
-
