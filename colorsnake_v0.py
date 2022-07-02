@@ -1,5 +1,6 @@
 import pygame
 import random
+import colorsys
 from pygame.locals import *
 
 pygame.init()
@@ -15,17 +16,20 @@ YELLOW = [255, 255, 0]
 YELLOW_LIGHT = [255, 235, 39]
 RED = [254, 8, 59]
 BLACK = [0, 0, 0]
+BLACK1 = [18,18,18]
 BLUE = [33, 61, 252]
 
 class Color():
     def __init__(self):
         self.value = [0,0,0]
     def random_color(self):
-        self.value[0] = random.randrange(256)
-        self.value[1] = random.randrange(256)
-        self.value[2] = random.randrange(256)
+        # bright colors
+        h,s,l = random.random(), random.uniform(0.7, 1.0), random.uniform(0.4, 0.65)
+        rgb_color = colorsys.hls_to_rgb(h,l,s)
+        for i in range(3):
+            self.value[i] = int(rgb_color[i]*256) 
 
-class Apple():
+class Apple():  
     def __init__(self, game_screen, snake):
         self.color = Color()
         self.color.random_color()
@@ -37,6 +41,7 @@ class Apple():
 
     def draw(self):
         rect1 = pygame.Rect(self.x, self.y, SIZE, SIZE)
+        self.color.random_color()
         pygame.draw.rect(self.game_screen, self.color.value, rect1)
 
     def new_position(self):
@@ -52,7 +57,6 @@ class Apple():
             if coord_x == self.snake.x[i] and coord_y == self.snake.y[i]:
                 return True
         return False
-    # gets random number
 
     def random_xcoordinate(self):
         coord = random.randrange(self.game_screen.get_width()//SIZE)*SIZE
@@ -120,10 +124,9 @@ class Snake():
 
 class SnakeGame:
     def __init__(self):
-
         pygame.mixer.init()
         self.surface = pygame.display.set_mode(size=(1000, 600))
-        self.snake = Snake(self.surface, 15)
+        self.snake = Snake(self.surface, 2)
         self.apple = Apple(self.surface, self.snake)
         # self.play_bg_music()
         self.clock = pygame.time.Clock()
@@ -147,7 +150,7 @@ class SnakeGame:
         pygame.display.flip()
 
     def render_bg(self):
-        self.surface.fill(BLACK)
+        self.surface.fill(BLACK1)
 
     def count_time(self):
         font = pygame.font.SysFont("consolas", 30)
