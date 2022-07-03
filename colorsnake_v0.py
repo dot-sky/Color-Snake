@@ -38,7 +38,7 @@ class Color():
         return getattr(self, 'value')
 
 
-class Apple():
+class Food():
     def __init__(self, game_screen, snake):
         self.color = Color()
         self.color.random_color()
@@ -85,7 +85,7 @@ class Snake():
         self.direction = RIGHT
         self.length = length
         self.power = False
-        self.new()
+        self.reset()
 
     def draw(self):
         for i in range(self.length):
@@ -136,9 +136,9 @@ class Snake():
         self.y.clear()
         self.color.clear()
         self.length = 1
-        self.new()
+        self.reset()
 
-    def new(self):
+    def reset(self):
         center_x = ((self.game_screen.get_width() // 2) // SIZE) * SIZE
         center_y = ((self.game_screen.get_height() // 2) // SIZE) * SIZE
         self.x = [center_x]*self.length
@@ -167,8 +167,7 @@ class SnakeGame:
         pygame.mixer.init()
         self.surface = pygame.display.set_mode(size=(900, 600))
         self.snake = Snake(self.surface, 8)
-        self.apple = Apple(self.surface, self.snake)
-        # self.play_bg_music()
+        self.food = Food(self.surface, self.snake)
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5
@@ -180,23 +179,24 @@ class SnakeGame:
 
         self.snake.move()
         if self.snake.power:
-            self.apple.enabled = True        
+            self.food.enabled = True        
 
         if self.snake_collition():
-            self.apple.enabled = False
+            self.food.enabled = False
             self.snake.power = False
             self.play_sound("crash")
             raise NameError("pause")
-            
-        self.ate_apple()
-        self.apple.draw()
+
+        self.food_eaten()
+        self.food.draw()
         self.show_score()
         self.count_time()
         pygame.display.flip()
 
     def render_bg(self):
         self.surface.fill(BLACK1)
-
+        if not self.snake.power:
+            pygame.draw.rect(self.surface, self.food.color.value, (0,0, self.surface.get_width(), self.surface.get_height()), 2)
     def count_time(self):
         font = pygame.font.SysFont("consolas", 30)
         time = pygame.time.get_ticks() - self.start_time
@@ -207,14 +207,14 @@ class SnakeGame:
         x = self.surface.get_width() - time_text.get_width()
         self.surface.blit(time_text, (x, 0))
 
-    def ate_apple(self):
-        if self.apple.enabled and self.is_collition(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
+    def food_eaten(self):
+        if self.food.enabled and self.is_collition(self.snake.x[0], self.snake.y[0], self.food.x, self.food.y):
             self.play_sound("ding")
-            self.snake.increase_size(self.apple)
-            self.apple.color.random_color()
-            self.apple.new_position()
+            self.snake.increase_size(self.food)
+            self.food.color.random_color()
+            self.food.new_position()
             self.snake.power = False
-            self.apple.enabled = False
+            self.food.enabled = False
             self.speed += 0.5
 
     def snake_collition(self):
