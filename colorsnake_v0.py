@@ -1,3 +1,4 @@
+from ast import While
 import pygame
 import random
 import colorsys
@@ -18,6 +19,7 @@ YELLOW_LIGHT = [255, 235, 39]
 RED = [254, 8, 59]
 BLACK = [0, 0, 0]
 BLACK1 = [18, 18, 18]
+GRAY = [105,105,105]
 BLUE = [33, 61, 252]
 
 
@@ -42,13 +44,17 @@ class Apple():
         self.color.random_color()
         self.game_screen = game_screen
         self.snake = snake
+        self.enabled = False
         self.x = 0
         self.y = 0
         self.new_position()
 
     def draw(self):
-        rect1 = pygame.Rect(self.x, self.y, SIZE, SIZE)
-        pygame.draw.rect(self.game_screen, self.color.value, rect1)
+        if self.enabled:
+            pygame.draw.rect(self.game_screen, self.color.value, pygame.Rect(self.x, self.y, SIZE, SIZE))
+        else:
+            pygame.draw.rect(self.game_screen, GRAY, pygame.Rect(self.x, self.y, SIZE, SIZE))
+            pygame.draw.rect(self.game_screen, self.color.value, pygame.Rect(self.x + BORDER, self.y + BORDER, SIZE - (BORDER*2), SIZE - (BORDER*2)))
 
     def new_position(self):
         coord_x = self.random_xcoordinate()
@@ -78,6 +84,7 @@ class Snake():
         self.game_screen = game_screen
         self.direction = RIGHT
         self.length = length
+        self.power = False
         self.new()
 
     def draw(self):
@@ -101,15 +108,20 @@ class Snake():
         # Move Head and if the head reaches an edge teleport to opposite edge
         if self.length > 0:
             if self.direction == LEFT:
-                self.x[0] = (self.x[0] - SIZE) % self.game_screen.get_width()
+                self.x[0] = self.x[0] - SIZE
             elif self.direction == RIGHT:
-                self.x[0] = (self.x[0] + SIZE) % self.game_screen.get_width()
+                self.x[0] = self.x[0] + SIZE
             elif self.direction == UP:
-                self.y[0] = (self.y[0] - SIZE) % self.game_screen.get_height()
+                self.y[0] = self.y[0] - SIZE
             elif self.direction == DOWN:
-                self.y[0] = (self.y[0] + SIZE) % self.game_screen.get_height()
-
-            self.draw()
+                self.y[0] = self.y[0] + SIZE
+        if self.x[0] < 0 or self.x[0] >= self.game_screen.get_width():
+            self.x[0] = self.x[0] % self.game_screen.get_width()
+            self.power = True
+        if self.y[0] < 0 or self.y[0] >= self.game_screen.get_height():
+            self.y[0] = self.y[0] % self.game_screen.get_height()
+            self.power = True
+        self.draw()
 
     def increase_size(self, apple):
         self.x.append(0)
@@ -165,16 +177,21 @@ class SnakeGame:
 
     def update(self):
         self.render_bg()
+
         self.snake.move()
+        if self.snake.power:
+            self.apple.enabled = True        
+
+        if self.snake_collition():
+            self.apple.enabled = False
+            self.snake.power = False
+            self.play_sound("crash")
+            raise NameError("pause")
+            
         self.ate_apple()
         self.apple.draw()
         self.show_score()
         self.count_time()
-
-        if self.snake_collition():
-            self.play_sound("crash")
-            raise NameError("pause")
-
         pygame.display.flip()
 
     def render_bg(self):
@@ -191,11 +208,13 @@ class SnakeGame:
         self.surface.blit(time_text, (x, 0))
 
     def ate_apple(self):
-        if self.is_collition(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
+        if self.apple.enabled and self.is_collition(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.play_sound("ding")
             self.snake.increase_size(self.apple)
             self.apple.color.random_color()
             self.apple.new_position()
+            self.snake.power = False
+            self.apple.enabled = False
             self.speed += 0.5
 
     def snake_collition(self):
@@ -205,7 +224,6 @@ class SnakeGame:
         return False
 
     def is_collition(self, x1, y1, x2, y2):
-        
         if (x1 == x2 and y1 == y2):
             return True
         return False
