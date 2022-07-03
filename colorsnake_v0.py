@@ -5,7 +5,8 @@ from pygame.locals import *
 
 pygame.init()
 # Constants
-SIZE = 40
+SIZE = 30
+BORDER = 3
 LEFT = 0
 RIGHT = 1
 UP = 2
@@ -16,22 +17,26 @@ YELLOW = [255, 255, 0]
 YELLOW_LIGHT = [255, 235, 39]
 RED = [254, 8, 59]
 BLACK = [0, 0, 0]
-BLACK1 = [18,18,18]
+BLACK1 = [18, 18, 18]
 BLUE = [33, 61, 252]
+
 
 class Color():
     def __init__(self):
         self.value = [100,100,100]
+
     def random_color(self):
         # bright colors
-        h,s,l = random.random(), random.uniform(0.7, 1.0), random.uniform(0.4, 0.65)
-        rgb_color = colorsys.hls_to_rgb(h,l,s)
+        h, s, l = random.random(), random.uniform(0.7, 1.0), random.uniform(0.4, 0.65)
+        rgb_color = colorsys.hls_to_rgb(h, l, s)
         for i in range(3):
-            self.value[i] = int(rgb_color[i]*256) 
-    def get_rgb(self):
-        return getattr(self,'value')
+            self.value[i] = int(rgb_color[i]*256)
 
-class Apple():  
+    def get_rgb(self):
+        return getattr(self, 'value')
+
+
+class Apple():
     def __init__(self, game_screen, snake):
         self.color = Color()
         self.color.random_color()
@@ -73,16 +78,20 @@ class Snake():
         self.game_screen = game_screen
         self.direction = RIGHT
         self.length = length
-        self.x = [200]*length
-        self.y = [200]*length
-        self.color = [Color().value]*length
+        self.new()
 
     def draw(self):
         for i in range(self.length):
-            pygame.draw.rect(self.game_screen, self.color[i], 
+            # solid 
+            # pygame.draw.rect(self.game_screen, WHITE,
+            #                  pygame.Rect(self.x[i], self.y[i], SIZE, SIZE))
+            # pygame.draw.rect(self.game_screen, self.color[i],
+            #                  pygame.Rect(self.x[i]+BORDER, self.y[i]+BORDER, SIZE-(BORDER*2), SIZE-(BORDER*2)))
+            # line
+            pygame.draw.rect(self.game_screen, self.color[i],
                              pygame.Rect(self.x[i], self.y[i], SIZE, SIZE))
-            pygame.draw.rect(self.game_screen, WHITE, 
-                             pygame.Rect(self.x[i]+3, self.y[i]+3, SIZE-6, SIZE-6))
+            pygame.draw.rect(self.game_screen, WHITE,
+                             pygame.Rect(self.x[i]+BORDER, self.y[i]+BORDER, SIZE-(BORDER*2), SIZE-(BORDER*2)))
 
     def move(self):
         # Move body
@@ -107,9 +116,22 @@ class Snake():
         self.y.append(0)
         local_rgb = apple.color.value.copy()
         self.color.append(local_rgb)
-        for color in self.color:
-            print(color)
+
         self.length += 1
+
+    def clear(self):
+        self.x.clear()
+        self.y.clear()
+        self.color.clear()
+        self.length = 1
+        self.new()
+
+    def new(self):
+        center_x = ((self.game_screen.get_width() // 2) // SIZE) * SIZE
+        center_y = ((self.game_screen.get_height() // 2) // SIZE) * SIZE
+        self.x = [center_x]*self.length
+        self.y = [center_y]*self.length
+        self.color = [WHITE]*self.length
 
     def move_left(self):
         if self.length == 1 or self.direction != RIGHT:
@@ -131,8 +153,8 @@ class Snake():
 class SnakeGame:
     def __init__(self):
         pygame.mixer.init()
-        self.surface = pygame.display.set_mode(size=(1000, 600))
-        self.snake = Snake(self.surface, 2)
+        self.surface = pygame.display.set_mode(size=(900, 600))
+        self.snake = Snake(self.surface, 8)
         self.apple = Apple(self.surface, self.snake)
         # self.play_bg_music()
         self.clock = pygame.time.Clock()
@@ -183,6 +205,7 @@ class SnakeGame:
         return False
 
     def is_collition(self, x1, y1, x2, y2):
+        
         if (x1 == x2 and y1 == y2):
             return True
         return False
@@ -251,6 +274,7 @@ class SnakeGame:
     def new_game(self):
         self.start_time = pygame.time.get_ticks()
         self.speed = 5
+        self.snake.clear()
 
     def load_scores(self):
         with open("resources/data.txt", "r") as file:
