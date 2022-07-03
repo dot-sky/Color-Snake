@@ -166,7 +166,7 @@ class SnakeGame:
     def __init__(self):
         pygame.mixer.init()
         self.surface = pygame.display.set_mode(size=(900, 600))
-        self.snake = Snake(self.surface, 8)
+        self.snake = Snake(self.surface, 1)
         self.food = Food(self.surface, self.snake)
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
